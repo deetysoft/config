@@ -1,7 +1,5 @@
 package com.deetysoft.config;
 
-import com.deetysoft.collections.Arrays;
-import com.deetysoft.util.StringReplacer;
 import com.deetysoft.util.TokenIndexRetriever;
 
 import java.io.File;
@@ -241,14 +239,14 @@ public class ConfigProperties
 	 *					delimiters
 	 */
 	public String	get (String name)
-		throws MissingPropertyException, StringFormatException
-	{
+		throws MissingPropertyException, StringFormatException {
+
 		String value = properties.get (name);
 
 		if (value == null)
 		{
 			throw new MissingPropertyException
-				(name, "Config");
+				("Property '"+name+"' not found in property map.");
 		}
 
 		List<Integer> tokenIndices = TokenIndexRetriever.getIndices (value,
@@ -258,13 +256,13 @@ public class ConfigProperties
 		if (tokenIndices.size() % 2 != 0)
 		{
 			throw new StringFormatException
-				("The property value '"+value+"' has unmatched '"+
-				 SUBSTITUTION_TOKEN+"'.",
-				 "ConfigProperties.STRING_FORMAT_EXCEPTION",
-				 Arrays.create (value));
+				("The value for property '"+name+"' has unmatched '"+
+				 SUBSTITUTION_TOKEN+"' :\n'"+value+"'.");
 		}
 
-		for (int i = tokenIndices.size()-2; i >= 0; i -= 2)
+		String expandedValue = new String (value);
+
+		for (int i = 0; i < tokenIndices.size()-1; i += 2)
 		{
 			int startIndex = tokenIndices.get(i);
 			int endIndex = tokenIndices.get(i+1);
@@ -284,7 +282,7 @@ public class ConfigProperties
 				if (propertyValue == null)
 				{
 					throw new MissingPropertyException
-						(envName, "System properties");
+						("Property '"+envName+"' not found in System properties.");
 				}
 			}
 			else
@@ -294,15 +292,14 @@ public class ConfigProperties
 				if (propertyValue == null)
 				{
 					throw new MissingPropertyException
-						(propertyName, "Property map");
+						("Property '"+propertyName+"' not found in property map.");
 				}
 			}
-
-			value = StringReplacer.substitute (value, propertyValue,
-					startIndex, endIndex);
+			expandedValue = expandedValue.replace(
+				SUBSTITUTION_TOKEN+propertyName+SUBSTITUTION_TOKEN, propertyValue);
 		}
 
-		return value;
+		return expandedValue;
 	}
 
 	/**
@@ -317,7 +314,7 @@ public class ConfigProperties
 	 * MyClass.MY_PROPERTY=The day is {0} and month is {1}.
 	 * <br>
 	 * Then call get with args = {"Monday", "April"} and receive
-	 * a return value of "the day is Monday and the month is April."
+	 * a return value of "The day is Monday and the month is April."
 	 *
 	 * @param	name	the property name
 	 * @param	args	the run-time args
@@ -354,9 +351,7 @@ public class ConfigProperties
 		if (value == null)
 		{
 			throw new MissingPropertyException
-				("Missing property '"+name+"'.",
-				 "ConfigProperties.MISSING_PROPERTY_EXCEPTION",
-				 Arrays.create (name));
+				("Property '"+name+"' not found in property map.");
 		}
 		return value;
 	}
